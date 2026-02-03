@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-gradient-to-br from-sui-light via-white to-deepbook-light text-gray-900 font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+  
+  /* Privacy badge */
+  .privacy-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-privacy-100 text-privacy-700 border border-privacy-200;
+  }
+  
+  /* Safety indicator */
+  .safety-check {
+    @apply flex items-center gap-2 p-3 rounded-lg bg-safety-50 border border-safety-200;
+  }
+  
+  /* Encrypted field blur */
+  .encrypted-blur {
+    @apply relative overflow-hidden;
+  }
+  
+  .encrypted-blur::after {
+    content: '';
+    @apply absolute inset-0 backdrop-blur-md bg-privacy-100/50;
+  }
+}
+
+@layer utilities {
+  .text-gradient-sui {
+    @apply bg-gradient-to-r from-sui-blue to-deepbook-primary bg-clip-text text-transparent;
+  }
+  
+  .border-gradient {
+    @apply border-2 border-transparent bg-gradient-to-r from-sui-blue to-deepbook-primary bg-clip-border;
+  }
+}
