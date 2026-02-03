@@ -1,128 +1,200 @@
-# AI Intent Trading Copilot on Sui
+# 🧠 AI Intent Trading Copilot on Sui
 
-> *Trade with natural language. Execute with precision.*
+> *Trade with natural language. Execute with precision — privately and safely.*
+
+---
 
 ## 🎯 The Big Idea
 
-AI Intent Trading Copilot reimagines crypto trading by letting users express their trading goals in plain English instead of manually configuring complex order parameters. Say "I want to buy $500 of SUI when it dips below $3.50" and let AI handle the rest—parsing your intent, finding the best execution path on DeepBook, and completing the trade securely.
+AI Intent Trading Copilot reimagines crypto trading by letting users express their trading goals in plain English instead of manually configuring complex order parameters.
 
-We're building the future of accessible DeFi trading by combining:
-- **Natural Language Processing** for intuitive user experience
-- **Sui Intents** for structured, verifiable execution
-- **DeepBook** for deep liquidity and efficient price discovery
-- **Walrus** for decentralized storage of trading history
-- **Seal** for encrypted privacy-preserving user preferences
+Say:
+> *“I want to buy $500 of SUI when slippage is below 0.3%.”*
 
-## 🚀 What We're Building
+The copilot parses your intent, validates strict safety constraints, executes the trade on **DeepBook**, and produces a **verifiable execution receipt** — while keeping your strategy **private by default**.
 
-### Core Features
+This is not just an “intent-to-swap” UI.  
+It is a **privacy-first, safety-aware AI trading copilot** built with Sui-native primitives.
 
-**🗣️ Natural Language Trading**
-- Express trading goals conversationally: "Swap 100 USDC for SUI at market price"
-- AI parses and structures your intent automatically
-- Review and confirm before execution
+---
 
-**📊 DeepBook Integration**
-- Real-time orderbook analysis for optimal execution
-- Simulated fills before committing transactions
+## 🚨 Why This Project Exists
+
+Most intent-based trading tools optimize for **convenience only**:
+- “Type what you want”
+- “We’ll find the best route”
+- “Trust us”
+
+But real trading requires more.
+
+**Trading requires:**
+- 🔐 **Privacy** — your strategy shouldn’t be public
+- 🛡️ **Safety** — bad trades should be rejected, not executed
+- 🧾 **Verifiability** — execution should be provable, not assumed
+
+This project is built to solve all three.
+
+---
+
+## ✨ What Makes This Different (Key Differentiators)
+
+### 🔐 1. Private Intents & Preferences (Core Differentiator)
+- User preferences (risk limits, slippage tolerance, constraints):
+  - are **encrypted using Seal**
+  - stored privately on **Walrus**
+  - owned and controlled by the user
+- Intent history and execution logs are private by default
+
+> Other tools parse your intent.  
+> **We protect your trading strategy.**
+
+---
+
+### 🛡️ 2. Safety-First Constraint Enforcement
+Trades are executed **only if all constraints pass**:
+
+- Max slippage or cancel
+- Liquidity threshold checks
+- Time-bound execution
+- Approved DeepBook pool only
+
+If constraints fail → **no transaction is sent**.
+
+> The copilot prevents bad trades instead of blindly executing them.
+
+---
+
+### 🧾 3. Verifiable Best-Execution Receipts
+After each trade, the system generates a **best-execution receipt** including:
+- Expected vs executed price
+- Slippage (bps)
+- DeepBook pool used
+- Transaction digest
+
+Receipts are stored on **Walrus** (with optional on-chain hashing).
+
+> Not “trust us” — **verify it**.
+
+---
+
+## 🚀 What We’re Building
+
+### 🗣️ Natural Language Trading
+- Express goals conversationally:
+  > *“Swap 100 USDC for SUI with max 0.3% slippage”*
+- AI parses intent into a **strict structured format**
+- Users review and confirm before execution
+
+### 📊 DeepBook Integration
+- Live orderbook reads for price discovery
+- Simulated fills before execution
 - Transparent pricing and slippage estimates
 
-**🔐 Privacy-First Design**
-- Trading preferences encrypted with Seal
-- Only you control access to your trading history
+### 🔐 Privacy-First Design
+- Preferences encrypted with Seal
 - No sensitive data stored on-chain
+- User controls access to their data
 
-**💾 Decentralized Storage**
+### 💾 Decentralized Storage
 - Walrus stores encrypted intent history and execution logs
-- Content-addressable references for efficient retrieval
-- Verifiable execution receipts
+- Content-addressed references for verifiable receipts
+
+---
 
 ## 🏗️ Architecture
-
 ```
 ┌─────────────────┐
-│   Web UI        │  User inputs natural language
+│ Web UI │ Natural language intent
 └────────┬────────┘
-         │
+│
 ┌────────▼────────┐
-│ AI Intent       │  Parses text → structured intent
-│ Parser          │  { action, assets, amount, constraints }
+│ AI Intent │ Text → structured IntentSpec
+│ Parser │ (schema-bound, deterministic)
 └────────┬────────┘
-         │
+│
 ┌────────▼────────┐
-│ Quote & Routing │  Fetches DeepBook orderbook
-│ Engine          │  Generates execution plan + quote
+│ Quote & Safety │ DeepBook orderbook
+│ Engine │ Simulation + constraint checks
 └────────┬────────┘
-         │
+│
 ┌────────▼────────┐
-│ DeepBook        │  Executes trade on-chain
-│ Executor        │  Returns transaction receipt
+│ DeepBook │ On-chain execution (testnet)
+│ Executor │ Tx digest + events
 └────────┬────────┘
-         │
+│
 ┌────────▼────────┐
-│ Walrus Storage  │  Stores encrypted execution logs
-│ + Seal Privacy  │  Encrypted user preferences
+│ Walrus + Seal │ Encrypted preferences
+│ Storage │ + execution receipts
 └─────────────────┘
 ```
 
+---
+
 ## 🔄 User Flow
 
-1. **Express Intent** → User types: *"Buy 50 SUI with USDC, max slippage 1%"*
-2. **AI Processing** → System parses into structured intent format
-3. **Orderbook Analysis** → Fetches live DeepBook data
-4. **Quote Generation** → Shows expected price, slippage, gas costs
-5. **User Confirmation** → Review and approve execution plan
-6. **On-Chain Execution** → Transaction submitted to Sui/DeepBook
-7. **Receipt & Storage** → Encrypted log saved to Walrus, receipt returned
+1. **Express Intent**  
+   *“Buy 50 SUI with USDC, max slippage 0.3%”*
+
+2. **AI Parsing**  
+   → strict `IntentSpec`
+
+3. **Orderbook Analysis**  
+   → DeepBook simulation + safety checks
+
+4. **Quote Preview**  
+   → expected output, slippage, fees
+
+5. **User Confirmation**
+
+6. **On-Chain Execution**  
+   → DeepBook transaction on Sui testnet
+
+7. **Receipt & Storage**  
+   → encrypted receipt stored on Walrus
+
+---
 
 ## 🛠️ Technical Stack
 
 ### Sui Ecosystem
-- **DeepBook** - On-chain orderbook for liquidity and execution
-- **Sui Intents** - Structured intent framework for deterministic execution
-- **Walrus** - Decentralized blob storage for trading history
-- **Seal** - Encryption layer for user privacy
+- **DeepBook** — on-chain orderbook & execution
+- **Sui Intents** — structured, deterministic execution
+- **Walrus** — decentralized encrypted storage
+- **Seal** — encryption & access control
 
 ### Intent Specification
 ```json
 {
-  "action": "buy" | "sell" | "swap",
+  "action": "swap",
   "sell_asset": "USDC",
   "buy_asset": "SUI",
   "amount": "100",
   "constraints": {
-    "max_slippage": "1%",
-    "limit_price": "3.50",
-    "time_limit": "1h"
+    "max_slippage_bps": 30,
+    "limit_price": "optional",
+    "time_limit_sec": 600
   }
 }
+
 ```
 
+
 ## 🎬 MVP Scope (ETHGlobal Hackathon)
+###   Shipping
 
-### What We're Shipping
-✅ Single trading pair (SUI/USDC)  
-✅ Market and aggressive limit orders  
-✅ Basic AI natural language parsing  
-✅ Wallet-integrated execution flow  
-✅ Demo-focused UI with clear intent → execution visualization  
-✅ DeepBook integration for live orderbook data  
-✅ Walrus storage for execution receipts  
-✅ Seal encryption for user preferences  
+✅ Real DeepBook testnet swaps
+✅ Intent → quote → execution
+✅ Encrypted preferences & logs
+✅ Constraint enforcement
+✅ CLI fallback for demo reliability
 
-### Out of Scope (Future Work)
-- Multi-intent batching
-- Advanced strategies (DCA, grid trading)
-- Social/referral trading features
-- Solver competition framework
+### Out of Scope
 
-## 🔒 Security & Privacy
+- Solver networks
 
-**Privacy Model**
-- User preferences encrypted client-side with Seal
-- Only content hashes stored on-chain
-- Users maintain full control over decryption keys
+- Multi-chain routing
 
+<<<<<<< HEAD
 **Execution Safety**
 - Deterministic intent parsing (no ambiguity)
 - Explicit user confirmation required
@@ -178,9 +250,29 @@ npm run dev
 
 ## 👥 Team
 
-Built for ETHGlobal by @mhiskall282/@georgegoldman/
+Built for ETHGlobal by @mhiskall282
+=======
+- zkML / heavy ML
+>>>>>>> 2ffa15ea1bb26183911f88e88e0399a46cc47b18
 
+- Automated strategies
 
 ---
 
-**Built on Sui | Powered by DeepBook | Secured by Seal | Stored on Walrus**
+## 🌟 Why This Matters
+
+### For Users
+
+- Trade by expressing goals, not mechanics
+
+- Protection from unsafe executions
+
+- Privacy-preserving by default
+
+### For Sui
+
+- Demonstrates Intents + DeepBook in a real app
+
+- Shows meaningful use of Walrus + Seal
+
+- Highlights safety and user ownership
