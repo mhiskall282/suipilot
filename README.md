@@ -194,7 +194,6 @@ Receipts are stored on **Walrus** (with optional on-chain hashing).
 
 - Multi-chain routing
 
-<<<<<<< HEAD
 **Execution Safety**
 - Deterministic intent parsing (no ambiguity)
 - Explicit user confirmation required
@@ -251,9 +250,6 @@ npm run dev
 ## 👥 Team
 
 Built for ETHGlobal by @mhiskall282
-=======
-- zkML / heavy ML
->>>>>>> 2ffa15ea1bb26183911f88e88e0399a46cc47b18
 
 - Automated strategies
 
@@ -276,3 +272,6 @@ Built for ETHGlobal by @mhiskall282
 - Shows meaningful use of Walrus + Seal
 
 - Highlights safety and user ownership
+
+
+
