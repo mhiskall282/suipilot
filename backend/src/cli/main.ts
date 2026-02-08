@@ -1,20 +1,29 @@
-import { quoteSwap } from "../deepbook/quote.ts";
-import { executeSwap } from "../deepbook/execute.ts";
-import type { IntentSpec } from "../types.ts";
+const API = "http://localhost:8787";
 
-const intent: IntentSpec = {
+const intent = {
   intentId: crypto.randomUUID(),
-  owner: "0xYOUR_ADDRESS",
+  owner: "0xa35de887586ac1a9e644bc8f1b24a0d54c6eea66b8feef8bfd94297adde8d479",
   type: "SWAP",
-  sell: { coinType: "USDC", amount: "5" },
-  buy: { coinType: "SUI" },
-  constraints: { maxSlippageBps: 30, orderType: "MARKET", timeLimitSec: 600 },
+  sell: { symbol: "DBUSDC", amount: 5 },
+  buy: { symbol: "SUI" },
+  constraints: { maxSlippageBps: 50, timeLimitSec: 600 },
 };
 
 console.log("Intent:", intent);
 
-const quote = await quoteSwap(intent);
-console.log("Quote:", quote);
+const q = await fetch(`${API}/quote`, {
+  method: "POST",
+  body: JSON.stringify(intent),
+}).then((r) => r.json());
+console.log("Quote:", q);
 
-const receipt = await executeSwap(intent);
+if (q.rejected) {
+  console.log("Rejected by constraints:", q.reason);
+  Deno.exit(0);
+}
+
+const receipt = await fetch(`${API}/execute`, {
+  method: "POST",
+  body: JSON.stringify(intent),
+}).then((r) => r.json());
 console.log("Receipt:", receipt);
