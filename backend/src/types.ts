@@ -1,34 +1,35 @@
 export type IntentSpec = {
   intentId: string;
-  owner: string; // Sui address
+  owner: string;
   type: "SWAP";
-  sell: { coinType: string; amount: string };
-  buy: { coinType: string };
+  sell: { symbol: string; amount: number }; // human units
+  buy: { symbol: string };
   constraints: {
     maxSlippageBps: number;
-    orderType: "MARKET" | "LIMIT";
     timeLimitSec: number;
-    limitPrice?: string;
   };
-  explain?: boolean;
+};
+
+export type Orderbook = {
+  bids: [string, string][];
+  asks: [string, string][];
+  timestamp: string;
 };
 
 export type Quote = {
-  expectedOut: string;
-  priceImpactBps: number;
+  poolKey: string;
+  side: "SELL_BASE" | "SELL_QUOTE";
+  amountIn: number;
+  expectedOut: number;
+  avgPrice: number; // quote/base
   slippageBps: number;
-  routePlan: {
-    market: string;
-    orderType: "MARKET" | "LIMIT";
-    limitPrice?: string;
-  };
+  fullyFilled: boolean;
+  timestampMs: string;
 };
 
 export type ExecutionReceipt = {
   intentId: string;
   txDigest: string;
-  fills: Array<{ price: string; size: string }>;
-  avgPrice: string;
-  slippageBps: number;
+  poolKey: string;
   timestamp: number;
 };
