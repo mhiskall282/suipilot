@@ -7,6 +7,14 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 backend/.env
+backend/target
+contract/build
+frontend-v2/node_modules
+frontend-v2/.env
+frontend-v1/node_modules
+frontend-v1/.env
+frontend/node_modules
+
 *.env
 
 node_modules
