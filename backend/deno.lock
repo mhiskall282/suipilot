@@ -3,8 +3,10 @@
   "specifiers": {
     "jsr:@std/assert@1": "1.0.18",
     "jsr:@std/internal@^1.0.12": "1.0.12",
-    "npm:@mysten/deepbook-v3@^1.0.1": "1.0.1_@mysten+sui@2.1.0__graphql@16.12.0_axios@1.13.4",
-    "npm:@mysten/sui@^2.1.0": "2.1.0_graphql@16.12.0",
+    "npm:@mysten/deepbook-v3@*": "1.0.1_@mysten+sui@2.2.0__graphql@16.12.0_axios@1.13.4",
+    "npm:@mysten/deepbook-v3@^1.0.1": "1.0.1_@mysten+sui@2.2.0__graphql@16.12.0_axios@1.13.4",
+    "npm:@mysten/sui@*": "2.2.0_graphql@16.12.0",
+    "npm:@mysten/sui@^2.2.0": "2.2.0_graphql@16.12.0",
     "npm:hono@4": "4.11.7",
     "npm:zod@^3.23.0": "3.25.76"
   },
@@ -67,7 +69,7 @@
         "@scure/base"
       ]
     },
-    "@mysten/deepbook-v3@1.0.1_@mysten+sui@2.1.0__graphql@16.12.0_axios@1.13.4": {
+    "@mysten/deepbook-v3@1.0.1_@mysten+sui@2.2.0__graphql@16.12.0_axios@1.13.4": {
       "integrity": "sha512-cBXLIbl9Ag1RuZr4LS+fH0LHpfdkIEC5Uc3GZsetiblMYOYVDb9nZM6c79gcKVCnoJMklGe1iK7nmpJOWXu2ew==",
       "dependencies": [
         "@mysten/bcs",
@@ -77,8 +79,8 @@
         "axios-retry"
       ]
     },
-    "@mysten/sui@2.1.0_graphql@16.12.0": {
-      "integrity": "sha512-q1keHOsvNrkfM+rCUHJRFDHagrdr7rCIsNGhM9NrtShAMtCEgCiChuCFGHGVjb3/J2CFj+SxPIG5fEb5bj+9UQ==",
+    "@mysten/sui@2.2.0_graphql@16.12.0": {
+      "integrity": "sha512-HlhxdDKTPIECO+I1L2Eu42rLA4xnSCgEhOtq7ku07RbUcagq6yB0kVr/TdayRZXvM+v7uiI//unQBF6Oifi0Mg==",
       "dependencies": [
         "@graphql-typed-document-node/core",
         "@mysten/bcs",
@@ -318,7 +320,7 @@
     "dependencies": [
       "jsr:@std/assert@1",
       "npm:@mysten/deepbook-v3@^1.0.1",
-      "npm:@mysten/sui@^2.1.0",
+      "npm:@mysten/sui@^2.2.0",
       "npm:hono@4",
       "npm:zod@^3.23.0"
     ]
