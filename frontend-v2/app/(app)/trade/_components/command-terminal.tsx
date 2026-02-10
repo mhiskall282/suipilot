@@ -1,13 +1,27 @@
 "use client";
+// app/trade/_components/command-terminal.tsx
 
 import { useState } from "react";
-import { parseIntent } from "@/lib/api";
-import type { IntentSpec } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { generateDeepBookTransaction } from "../../hooks/useAiAgent"; // Import the AI Hook
+
+import { Transaction } from "@mysten/sui/transactions";
+import { IntentSpec, Quote } from "@/lib/types";
+import { dAppKit } from "../../dapp-kit";
+import { selectObject } from "../../lib/objectSelector";
+import * as dbTx from "@/app/(app)/utils/deepbook";
+
+type AgentResult = {
+  text: string;
+  transaction: Transaction | null;
+  intent: IntentSpec | null;
+  quote?: Quote | null;
+};
 
 interface CommandTerminalProps {
-  onIntentParsed: (intent: IntentSpec) => void;
+  // Updated signature to handle both text response and transaction object
+  onIntentParsed: (result: AgentResult) => void;
   onError: (error: string) => void;
   disabled?: boolean;
 }
@@ -15,7 +29,7 @@ interface CommandTerminalProps {
 const SUGGESTION_CHIPS = [
   "Swap 50 SUI for USDC",
   "Buy 100 USDC with SUI",
-  "Sell 25 SUI for USDC",
+  "Place a limit buy order for 10 SUI at 1.5 USDC",
 ];
 
 export function CommandTerminal({
@@ -25,14 +39,51 @@ export function CommandTerminal({
 }: CommandTerminalProps) {
   const [prompt, setPrompt] = useState("");
   const [isParsing, setIsParsing] = useState(false);
+  const account = dAppKit.stores.$connection.get().account;
 
   async function handleSubmit() {
     if (!prompt.trim() || isParsing || disabled) return;
 
+    if (!account) {
+      onError("Please connect your wallet first");
+      return;
+    }
+
     setIsParsing(true);
     try {
-      const intent = await parseIntent(prompt);
-      onIntentParsed(intent);
+      // 1. Call Gemini to parse intent and generate transaction
+      // Note: In a production app, you should fetch the user's real BalanceManager ID
+      // from a context or on-chain query.
+
+      // check if this user has the balance manager in their wallet
+      let balanceManagerId: string | undefined;
+      try {
+        const balanceManagerId = await selectObject(
+          dAppKit.getClient(),
+          dAppKit.stores.$connection.get().account!.address,
+          "0xfb28c4cbc6865bd1c897d26aecbe1f8792d1509a20ffec692c800660cbec6982::balance_manager::BalanceManager",
+        );
+      } catch (e) {
+        const tx = dbTx.createBalanceManagerTx(account.address);
+        onIntentParsed({
+          text: "You don’t have a DeepBook Balance Manager yet. Review and sign to create one.",
+          transaction: tx,
+          intent: {
+            intentId: String(Date.now()),
+            owner: account.address,
+            action: "CREATE_BALANCE_MANAGER", // make sure your IntentSpec supports this
+          } as any,
+        });
+        return;
+      }
+      const result = await generateDeepBookTransaction(
+        prompt,
+        account.address,
+        balanceManagerId, // TODO: Replace with actual fetched ID
+      );
+
+      // 2. Pass the result (text + tx) up to the parent page
+      onIntentParsed(result);
       setPrompt("");
     } catch (err) {
       onError(err instanceof Error ? err.message : "Failed to parse intent");
@@ -50,7 +101,7 @@ export function CommandTerminal({
 
   return (
     <div className="space-y-3">
-      <div className="relative bg-[#0F0F0F] rounded-2xl border border-white/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.3)] overflow-hidden">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0F0F0F] shadow-[0_4px_30px_rgba(0,0,0,0.3)]">
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
@@ -59,23 +110,23 @@ export function CommandTerminal({
           disabled={disabled || isParsing}
           rows={3}
           className={cn(
-            "w-full bg-transparent text-white placeholder-[#555] text-sm resize-none outline-none p-4 pb-12",
-            (disabled || isParsing) && "opacity-50 cursor-not-allowed",
+            "w-full resize-none bg-transparent p-4 pb-12 text-sm text-white placeholder-[#555] outline-none",
+            (disabled || isParsing) && "cursor-not-allowed opacity-50",
           )}
         />
-        <div className="absolute bottom-3 right-3">
+        <div className="absolute right-3 bottom-3">
           <button
             onClick={handleSubmit}
             disabled={!prompt.trim() || isParsing || disabled}
             className={cn(
-              "size-8 rounded-lg flex items-center justify-center transition-all",
+              "flex size-8 items-center justify-center rounded-lg transition-all",
               prompt.trim() && !isParsing && !disabled
-                ? "bg-brand-accent hover:bg-[#4DA3FF] text-white"
+                ? "bg-brand-accent text-white hover:bg-[#4DA3FF]"
                 : "bg-white/5 text-[#555]",
             )}
           >
             {isParsing ? (
-              <span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
             ) : (
               <svg
                 width="16"
@@ -99,7 +150,7 @@ export function CommandTerminal({
           <Badge
             key={chip}
             variant="outline"
-            className="cursor-pointer hover:bg-white/5 hover:border-white/20 transition-colors text-[#888]"
+            className="cursor-pointer text-[#888] transition-colors hover:border-white/20 hover:bg-white/5"
             onClick={() => !disabled && !isParsing && setPrompt(chip)}
           >
             {chip}
@@ -107,13 +158,13 @@ export function CommandTerminal({
         ))}
       </div>
 
-      <p className="text-xs text-[#555] text-center">
+      <p className="text-center text-xs text-[#555]">
         Press{" "}
-        <kbd className="px-1.5 py-0.5 bg-white/5 rounded text-[10px] text-[#888] border border-white/10">
+        <kbd className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-[#888]">
           ⌘
         </kbd>{" "}
         +{" "}
-        <kbd className="px-1.5 py-0.5 bg-white/5 rounded text-[10px] text-[#888] border border-white/10">
+        <kbd className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-[#888]">
           Enter
         </kbd>{" "}
         to submit
