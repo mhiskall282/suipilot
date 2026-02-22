@@ -9,22 +9,56 @@ import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { dAppKit } from "../dapp-kit";
 import { selectCoinObjectId } from "../lib/coinSelector";
 
+const SYMBOL_ALIASES: Record<string, string> = {
+  // DeepBook testnet uses "DB" stablecoins
+  USDC: "DBUSDC",
+  USDT: "DBUSDT",
+
+  // optional: common user typo
+  "USDC.E": "DBUSDC",
+};
+
+const ORDER_TYPE_U8: Record<"GTC" | "IOC" | "FOK" | "POST_ONLY", number> = {
+  GTC: 0, // NO_RESTRICTION
+  IOC: 1, // IMMEDIATE_OR_CANCEL
+  FOK: 2, // FILL_OR_KILL
+  POST_ONLY: 3, // POST_ONLY
+};
+
+const SELF_MATCH_U8: Record<"ALLOW" | "CANCEL_TAKER" | "CANCEL_MAKER", number> =
+  {
+    ALLOW: 0,
+    CANCEL_TAKER: 1,
+    CANCEL_MAKER: 2,
+  };
+
 const COIN_TYPES = testnetCoins;
 const client = dAppKit.getClient();
 const userAddress = dAppKit.stores.$connection.get().account?.address;
 
-function coinTypeFromSymbol(symbol: string) {
-  const key = symbol.toUpperCase();
+function normalizeSymbol(symbol: string) {
+  const raw = symbol.toUpperCase();
+  return SYMBOL_ALIASES[raw] ?? raw;
+}
+
+function coinEntryFromSymbol(symbol: string) {
+  const key = normalizeSymbol(symbol);
   const entry = (COIN_TYPES as any)[key];
-  if (!entry?.type) throw new Error(`Unsupported coin symbol: ${symbol}`);
-  return entry.type as string;
+  if (!entry) throw new Error(`Unsupported coin symbol: ${symbol}`);
+  return entry as { type?: string; scalar?: number };
+}
+
+function coinTypeFromSymbol(symbol: string) {
+  const entry = coinEntryFromSymbol(symbol);
+  if (!entry.type) throw new Error(`Missing type for symbol: ${symbol}`);
+  return entry.type;
 }
 
 function coinScalarFromSymbol(symbol: string) {
-  const key = symbol.toUpperCase();
-  const entry = (COIN_TYPES as any)[key];
-  if (!entry?.scalar) throw new Error(`Missing scalar for symbol: ${symbol}`);
-  return entry.scalar as number;
+  const entry = coinEntryFromSymbol(symbol);
+  if (typeof entry.scalar !== "number")
+    throw new Error(`Missing scalar for symbol: ${symbol}`);
+  return entry.scalar;
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
@@ -123,26 +157,46 @@ export async function generateDeepBookTransaction(
         const pair = args!.pair as string; // "SUI/USDC"
         const [base, quote] = pair.split("/");
         const side = args!.side as "buy" | "sell";
-        const price = String(args!.price);
-        const quantity = String(args!.quantity);
+
+        const tif =
+          (args!.timeInForce as "GTC" | "IOC" | "FOK" | "POST_ONLY") ?? "GTC";
+        const selfMatch =
+          (args!.selfMatch as "ALLOW" | "CANCEL_TAKER" | "CANCEL_MAKER") ??
+          "ALLOW";
+
+        const payWithDeep = (args!.payWithDeep as boolean) ?? true;
+        const expireMs =
+          typeof args!.expireMs === "number"
+            ? args!.expireMs
+            : Date.now() + 24 * 60 * 60 * 1000;
 
         const poolId = POOL_IDS[pair];
         if (!poolId) throw new Error(`Unsupported pair: ${pair}`);
+        const price = String(args!.price);
+        const quantity = String(args!.quantity);
+
         const baseCoinType = coinTypeFromSymbol(base);
         const quoteCoinType = coinTypeFromSymbol(quote);
+
+        const clientOrderId = BigInt(Date.now());
 
         tx = dbTx.placeLimitOrderTx(
           poolId,
           userBalanceManagerId,
-          Date.now(),
+          clientOrderId,
+          ORDER_TYPE_U8[tif], // for now but then there still,  1 → IOC, 2 → Post Only, 3 → FOK
+          SELF_MATCH_U8[selfMatch], // for now but then there still,  1 → Cancel Oldest, 2 → Cancel Newest, 3 → Abort
           BigInt((args!.price as number) * coinScalarFromSymbol(quote)),
           BigInt((args!.quantity as number) * coinScalarFromSymbol(base)),
           side === "buy",
+          payWithDeep,
+          // side === "buy",
+          expireMs,
           baseCoinType,
           quoteCoinType,
         );
 
-        reply = `Placing limit order: ${side} ${quantity} ${base} at ${price}.`;
+        reply = `Placing ${tif} limit order: ${side} ${args!.quantity} ${base} at ${args!.price} ${quote}.`;
 
         intent = {
           intentId: String(Date.now()),
